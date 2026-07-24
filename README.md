@@ -1,3 +1,6 @@
+Thanks  to Kankros for (better) implementation i'll archive this fork
+
+
 # Packrat Fork — Storage Browser
 
 **Fork of the [original mod](https://mods.vintagestory.at/show/mod/36243) by [dizzyd](https://mods.vintagestory.at/show/user/C0109EAD44B2C9580E9B) — [GitHub](https://github.com/dizzyd/packrat)**
