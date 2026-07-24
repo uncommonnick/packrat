@@ -327,7 +327,7 @@ public class PackratModSystem : ModSystem
         var checkType = container.GetType();
         while (checkType != null && checkType != typeof(object))
         {
-            if (checkType.Name == "BlockEntityDisplayCase" || checkType.Name == "BETreeHollowGrown")
+            if (checkType.Name == "BlockEntityDisplayCase" || checkType.Name == "BETreeHollowGrown" || checkType.Name.StartsWith("BERack") || checkType.Name == "BEBasketClosed" || checkType.Name == "BECrateClosed")
                 return true;
             checkType = checkType.BaseType;
         }
@@ -697,8 +697,7 @@ public class PackratModSystem : ModSystem
             int directAccessCount = 0;
             foreach (var chest in chests)
             {
-                // Added check if it's from moreinventorys mod, without there was 3s lag 
-                if (IsDirectAccessContainer(chest) || IsMoreInventorysRack(chest))
+                if (IsDirectAccessContainer(chest))
                 {
                     directAccessCount++;
                 }
@@ -771,10 +770,6 @@ public class PackratModSystem : ModSystem
             ShowBrowser();
         }
     }
-    private static bool IsMoreInventorysRack(BlockEntity be)
-    {
-        return be.GetType().FullName?.Contains("MoreInventorys") == true;
-    }
     // Skips slots that are locked by containers
     private static int GetInventoryStartingSlot(BlockEntityContainer container)
     {
@@ -810,7 +805,7 @@ public class PackratModSystem : ModSystem
             bool isCrate = IsCrate(container);
             bool isDirect = IsDirectAccessContainer(container);
 
-                composite.AddInventory(container.Inventory, isCrate, GetInventoryStartingSlot(container));
+            composite.AddInventory(container.Inventory, isCrate, GetInventoryStartingSlot(container));
 
             // Make sure direct access inventories are opened on the client
             // (Chests are opened via the Harmony patch, but direct access containers bypass that)
@@ -889,13 +884,21 @@ public class PackratModSystem : ModSystem
     {
         // Check if source is from a container (chest or crate)
         var sourceInvId = sourceSlot?.Inventory?.InventoryID;
-        if (sourceInvId != null && (sourceInvId.StartsWith("chest-") || sourceInvId.StartsWith("crate-") || sourceInvId.StartsWith("bettercrate-")))
+        if (sourceInvId != null && (sourceInvId.StartsWith("chest-") || sourceInvId.StartsWith("crate-") || sourceInvId.StartsWith("bettercrate-") || sourceInvId.StartsWith("rack") || sourceInvId.StartsWith("mibasketclosed-") || sourceInvId.StartsWith("micrateclosed-")))
         {
             // Source is from a container - block all other containers as destinations
             // This forces items to go to player inventory
             if (__instance.InventoryID != null &&
-                (__instance.InventoryID.StartsWith("chest-") || __instance.InventoryID.StartsWith("crate-") || __instance.InventoryID.StartsWith("bettercrate-")))
+                (__instance.InventoryID.StartsWith("chest-") || __instance.InventoryID.StartsWith("crate-") || __instance.InventoryID.StartsWith("bettercrate-") || __instance.InventoryID.StartsWith("rack") || __instance.InventoryID.StartsWith("mibasketclosed-") || __instance.InventoryID.StartsWith("micrateclosed-")))
             {
+            if (sourceSlot?.Inventory != null)
+            {
+                int slotId = sourceSlot.Inventory.GetSlotId(sourceSlot);
+                if (slotId >= 0)
+                {
+                    sourceSlot.Inventory.DirtySlots.Add(slotId); // Oficjalny mechanizm redraw w VS
+                }
+            }
                 __result = new WeightedSlot();
                 return false;
             }
